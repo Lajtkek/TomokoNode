@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id BigInt @id
+
+  reactionCounts UserReactionCount[]
+
+  reactedTo UserReaction[] @relation(name: "reactee")
+  reactedBy UserReaction[] @relation(name: "reactor")
+}
+
+model UserReaction {
+  id        BigInt   @id @default(autoincrement())
+  emojiName String
+  createdAt DateTime @default(now())
+
+  reactor   User   @relation(name: "reactor", fields: [idReactor], references: [id])
+  idReactor BigInt
+
+  reactee   User   @relation(name: "reactee", fields: [idReactee], references: [id])
+  idReactee BigInt
+
+  reactionCounter   UserReactionCount @relation(fields: [idReactionCounter], references: [id])
+  idReactionCounter BigInt
+
+  @@unique([idReactor, idReactee, emojiName])
+}
+
+model UserReactionCount {
+  id BigInt @id @default(autoincrement())
+
+  owner  User   @relation(fields: [idUser], references: [id])
+  idUser BigInt
+
+  emojiName String
+  count     Int    @default(0)
+
+  reactionRecord UserReaction[]
+
+  @@unique([idUser, emojiName])
+}
