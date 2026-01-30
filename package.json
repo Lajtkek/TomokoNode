@@ -5,7 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "ts-node --esm index.ts"
+    "start": "ts-node --esm index.ts",
+    "db:reset": "prisma migrate reset --force",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed"
   },
   "keywords": [],
   "author": "",

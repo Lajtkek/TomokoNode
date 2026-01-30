@@ -37,7 +37,7 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 
-addReactionCountModule(client);
+addReactionCountModule(client, prisma);
 
 client.login(token);
 

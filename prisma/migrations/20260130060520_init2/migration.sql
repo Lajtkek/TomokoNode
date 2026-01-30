@@ -1,6 +1,7 @@
 -- CreateTable
 CREATE TABLE "User" (
     "id" BIGINT NOT NULL,
+    "username" TEXT NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -11,7 +12,7 @@ CREATE TABLE "UserReaction" (
     "emojiName" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "idReactor" BIGINT NOT NULL,
-    "idReactee" BIGINT NOT NULL,
+    "idReactTarget" BIGINT NOT NULL,
     "idReactionCounter" BIGINT NOT NULL,
 
     CONSTRAINT "UserReaction_pkey" PRIMARY KEY ("id")
@@ -28,7 +29,7 @@ CREATE TABLE "UserReactionCount" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "UserReaction_idReactor_idReactee_emojiName_key" ON "UserReaction"("idReactor", "idReactee", "emojiName");
+CREATE UNIQUE INDEX "UserReaction_idReactor_idReactTarget_emojiName_key" ON "UserReaction"("idReactor", "idReactTarget", "emojiName");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "UserReactionCount_idUser_emojiName_key" ON "UserReactionCount"("idUser", "emojiName");
@@ -37,7 +38,7 @@ CREATE UNIQUE INDEX "UserReactionCount_idUser_emojiName_key" ON "UserReactionCou
 ALTER TABLE "UserReaction" ADD CONSTRAINT "UserReaction_idReactor_fkey" FOREIGN KEY ("idReactor") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserReaction" ADD CONSTRAINT "UserReaction_idReactee_fkey" FOREIGN KEY ("idReactee") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserReaction" ADD CONSTRAINT "UserReaction_idReactTarget_fkey" FOREIGN KEY ("idReactTarget") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserReaction" ADD CONSTRAINT "UserReaction_idReactionCounter_fkey" FOREIGN KEY ("idReactionCounter") REFERENCES "UserReactionCount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -14,11 +14,12 @@ datasource db {
 }
 
 model User {
-  id BigInt @id
+  id       BigInt @id
+  username String
 
   reactionCounts UserReactionCount[]
 
-  reactedTo UserReaction[] @relation(name: "reactee")
+  reactedTo UserReaction[] @relation(name: "reactTarget")
   reactedBy UserReaction[] @relation(name: "reactor")
 }
 
@@ -30,13 +31,13 @@ model UserReaction {
   reactor   User   @relation(name: "reactor", fields: [idReactor], references: [id])
   idReactor BigInt
 
-  reactee   User   @relation(name: "reactee", fields: [idReactee], references: [id])
-  idReactee BigInt
+  reactTarget   User   @relation(name: "reactTarget", fields: [idReactTarget], references: [id])
+  idReactTarget BigInt
 
   reactionCounter   UserReactionCount @relation(fields: [idReactionCounter], references: [id])
   idReactionCounter BigInt
 
-  @@unique([idReactor, idReactee, emojiName])
+  @@unique([idReactor, idReactTarget, emojiName])
 }
 
 model UserReactionCount {
