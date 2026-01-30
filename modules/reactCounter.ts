@@ -5,12 +5,12 @@ import { PrismaClient } from "../generated/prisma/index.js";
 
 export function addReactionCountModule(client: Client, prisma: PrismaClient){
     client.on(Events.MessageReactionAdd, async (reaction, user) => {
-        console.log("xd")
-        const emojiName = reaction.emoji.toString();
+        const emojiName = reaction.emoji.name?.toLocaleLowerCase();
         const idUser = parseInt(user.id);
         const idReactTarget = parseInt(reaction.message.author?.id ?? "-1")
         // TODO: ADD BACK FOR PRODUCTION
         //if(idUser == idReactTarget || idReactTarget == -1) return;
+        if(!emojiName) return;
 
         const dbUser = await prisma.user.upsert({
             where: {
