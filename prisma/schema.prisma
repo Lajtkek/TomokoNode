@@ -21,6 +21,8 @@ model User {
 
   reactedTo UserReaction[] @relation(name: "reactTarget")
   reactedBy UserReaction[] @relation(name: "reactor")
+
+  helperScore Int @default(0)
 }
 
 model UserReaction {

@@ -1,9 +1,24 @@
 import { Client, GatewayIntentBits, Events, type PartialUser, type User } from "discord.js";
 import { PrismaClient } from "../generated/prisma/index.js";
 
-
+const SCORE_FOR_REACT = 1;
+const SCORE_FOR_MESSAGE = 1;
 
 export function addReactionCountModule(client: Client, prisma: PrismaClient){
+
+    async function addScore(idUser: number, score: number){
+        await prisma.user.update({
+            where: {
+                id: idUser,
+            },
+            data: {
+                helperScore: {
+                    increment: score
+                }
+            }
+        })
+    }
+
     client.on(Events.MessageReactionAdd, async (reaction, user) => {
         const emojiName = reaction.emoji.name?.toLocaleLowerCase();
         const idUser = parseInt(user.id);
@@ -37,7 +52,7 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
 
             }
         })
-        console.log(reactionCounter)
+
         if(!reactionCounter) return;
 
         let reactCounterRecord = await prisma.userReaction.findFirst({
@@ -66,10 +81,14 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
                     }
                 }
             })
+
+            addScore(idUser, SCORE_FOR_REACT)
         }
     })
 
     client.on(Events.MessageCreate, (message) => {
-        console.log(`${message.author.username} wrote: "${message.content}"`)
+        addScore(parseInt(message.author.id), SCORE_FOR_MESSAGE)
     });
+
+
 }
