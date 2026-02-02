@@ -1,22 +1,48 @@
-import { Client, GatewayIntentBits, Events, type PartialUser, type User } from "discord.js";
+import { Client, GatewayIntentBits, Events, type PartialUser, type User, Guild, GuildMember } from "discord.js";
 import { PrismaClient } from "../generated/prisma/index.js";
+
+// todo dát všechny id jako string
+// todo multiple reakce nepočítá ani jak count tak ani jak helperScore
+// todo nečte historii
 
 const SCORE_FOR_REACT = 1;
 const SCORE_FOR_MESSAGE = 1;
 
+
 export function addReactionCountModule(client: Client, prisma: PrismaClient){
 
-    async function addScore(idUser: number, score: number){
-        await prisma.user.update({
+    const roleConfig = process.env.ROLE_IDS?.split(",").map(x => {
+    const touple = x.split("=")
+        return {
+            id: touple?.at(0) ?? "",
+            count: parseInt(touple?.at(1) ?? "0")
+        }
+    }) ?? []
+
+    async function addScore(user: User | PartialUser, guild: Guild, score: number){
+        const id = parseInt(user.id);
+        const res = await prisma.user.upsert({
             where: {
-                id: idUser,
+                id
             },
-            data: {
+            update: {
                 helperScore: {
                     increment: score
                 }
+            },
+            create: {
+                id,
+                username: user.username ?? "",
             }
         })
+
+        const rolesToHave = roleConfig.filter(x => res.helperScore >= x.count);
+        if(rolesToHave.length == 0) return;
+
+        console.log(`Adding roles ${rolesToHave.map(x => x.id)} to ${user.id}`)
+        const member: GuildMember = await guild.members.fetch(user.id);
+        console.log(rolesToHave.map(x => x.id))
+        await member.roles.add(rolesToHave.map(x => x.id));
     }
 
     client.on(Events.MessageReactionAdd, async (reaction, user) => {
@@ -82,12 +108,13 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
                 }
             })
 
-            addScore(idUser, SCORE_FOR_REACT)
+            await addScore(user, reaction.message.guild!, SCORE_FOR_REACT)
         }
     })
 
-    client.on(Events.MessageCreate, (message) => {
-        addScore(parseInt(message.author.id), SCORE_FOR_MESSAGE)
+    client.on(Events.MessageCreate, async (message) => {
+        // nepočítá se
+        await addScore(message.author, message.guild!, SCORE_FOR_MESSAGE)
     });
 
 
