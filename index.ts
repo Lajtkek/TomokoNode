@@ -1,11 +1,10 @@
-import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
+import { Client, GatewayIntentBits, Events, Partials, Collection, REST, Routes } from "discord.js";
 import dotenv from "dotenv";
 
 import { addReactionCountModule } from "./modules/reactCounter.ts"
 import { PrismaClient } from "./generated/prisma/index.js";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-
 
 dotenv.config({ path: ".env" });
 dotenv.config({ path: ".env.local", override: true });
@@ -30,7 +29,8 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
   ],
-  partials: [Partials.Message, Partials.Reaction, Partials.Channel]
+  partials: [Partials.Message, Partials.Reaction, Partials.Channel],
+  
 });
 
 client.once(Events.ClientReady, (readyClient) => {
@@ -40,7 +40,69 @@ client.once(Events.ClientReady, (readyClient) => {
 
 addReactionCountModule(client, prisma);
 
+// commands START
+client.commands = new Collection(); 
+
+import debugCommands from "./commands/debug/debug.ts" 
+const commands = [debugCommands]
+
+for (const command of commands) {
+	client.commands.set(command.data.name, command);
+}
+client.on(Events.InteractionCreate, async (interaction) => {
+	if (!interaction.isChatInputCommand()) return;
+	const command = interaction.client.commands.get(interaction.commandName);
+
+	if (!command) {
+		console.error(`No command matching ${interaction.commandName} was found.`);
+		return;
+	}
+
+	try {
+		await command.execute(interaction);
+	} catch (error) {
+		console.error(error);
+		if (interaction.replied || interaction.deferred) {
+			await interaction.followUp({
+				content: 'There was an error while executing this command!',
+			});
+		} else {
+			await interaction.reply({
+				content: 'There was an error while executing this command!',
+			});
+		}
+	}
+});
+
+const rest = new REST({ version: "10" }).setToken(token);
+const clientId = process.env.CLIENT_ID ?? (() => {
+  throw new Error("CLIENT_ID environment variable is not set");
+})();
+
+const guildId = process.env.GUILD_ID ?? (() => {
+  throw new Error("GUID_ID environment variable is not set");
+})();
+// and deploy your commands!
+(async () => {
+	try {
+		console.log(`Started refreshing ${commands.length} application (/) commands.`);
+
+    const commandsPayload = commands.map(c => c.data.toJSON());
+    console.log("payload:", JSON.stringify(commandsPayload, null, 2));
+		// The put method is used to fully refresh all commands in the guild with the current set
+		const data = await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commandsPayload }) as any; // find type
+
+		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+	} catch (error) {
+		// And of course, make sure you catch and log any errors!
+		console.error(error);
+	}
+})();
+//commands end
+
 client.login(token);
+
+
 
 // Cleanup on exit
 process.on('SIGINT', async () => {

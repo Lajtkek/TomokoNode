@@ -23,7 +23,7 @@
     "verbatimModuleSyntax": false,
     "moduleDetection": "force"
   },
-  "include": ["*.ts"],
+  "include": ["*.ts", "src"],
   "ts-node": {
     "esm": true
   }
