@@ -44,23 +44,29 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
     }
 
     client.on(Events.MessageReactionAdd, async (reaction, user) => {
+        
+        if(user.partial) user = await user.fetch();
+        if(reaction.partial) reaction = await reaction.fetch();
+        if(reaction.message.author?.partial) reaction.message.author = await reaction.message.author.fetch()
+        
         const emojiName = reaction.emoji.name?.toLocaleLowerCase();
         const idUser = user.id;
-        const idReactTarget = reaction.message.author?.id
+        const idReactTarget = reaction.message.author?.id;
+
         // TODO: ADD BACK FOR PRODUCTION
         //if(idUser == idReactTarget || idReactTarget == -1) return;
         if(!emojiName || !idReactTarget) return;
 
         const dbUser = await prisma.user.upsert({
             where: {
-                id: idUser
+                id: idReactTarget
             },
             update: {
 
             },
             create: {
-                id: idUser,
-                username: user.username ?? "N/A"
+                id: idReactTarget,
+                username: reaction.message.author?.username ?? "N/A"
             }
         })
 
@@ -69,7 +75,7 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
                 idUser_emojiName: { idUser: idReactTarget, emojiName },
             },
             create: {
-                idUser,
+                idUser: idReactTarget,
                 emojiName
             },
             update: {
@@ -106,7 +112,7 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
                 }
             })
 
-            await addScore(user, reaction.message.guild!, SCORE_FOR_REACT)
+            await addScore(reaction.message.author!, reaction.message.guild!, SCORE_FOR_REACT)
         }
     })
 

@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Events } from "discord.js";
+import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
 import dotenv from "dotenv";
 
 import { addReactionCountModule } from "./modules/reactCounter.ts"
@@ -30,7 +30,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
   ],
-  
+  partials: [Partials.Message, Partials.Reaction, Partials.Channel]
 });
 
 client.once(Events.ClientReady, (readyClient) => {
