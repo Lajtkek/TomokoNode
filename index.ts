@@ -10,7 +10,7 @@ dotenv.config({ path: ".env" });
 dotenv.config({ path: ".env.local", override: true });
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is not set");
+	throw new Error("DATABASE_URL environment variable is not set");
 }
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -19,31 +19,32 @@ const prisma = new PrismaClient({ adapter });
 await prisma.$connect();
 
 const token = process.env.TOKEN ?? (() => {
-  throw new Error("TOKEN environment variable is not set");
+	throw new Error("TOKEN environment variable is not set");
 })();
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildMessageReactions,
-  ],
-  partials: [Partials.Message, Partials.Reaction, Partials.Channel],
-  
+	intents: [
+		GatewayIntentBits.MessageContent,
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMessages,
+		GatewayIntentBits.GuildMessageReactions,
+	],
+	partials: [Partials.Message, Partials.Reaction, Partials.Channel],
+
 });
 
 client.once(Events.ClientReady, (readyClient) => {
-  console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
 
 addReactionCountModule(client, prisma);
 
 // commands START
-client.commands = new Collection(); 
+client.commands = new Collection();
+client.prisma = prisma;
 
-import debugCommands from "./commands/debug/debug.ts" 
+import debugCommands from "./commands/debug/debug.ts"
 const commands = [debugCommands]
 
 for (const command of commands) {
@@ -62,33 +63,45 @@ client.on(Events.InteractionCreate, async (interaction) => {
 		await command.execute(interaction);
 	} catch (error) {
 		console.error(error);
-		if (interaction.replied || interaction.deferred) {
-			await interaction.followUp({
-				content: 'There was an error while executing this command!',
-			});
-		} else {
-			await interaction.reply({
-				content: 'There was an error while executing this command!',
-			});
+		// Check if interaction is still valid before trying to reply
+		if (!interaction.isRepliable()) {
+			console.error('Interaction is no longer repliable');
+			return;
+		}
+
+		try {
+			if (interaction.replied || interaction.deferred) {
+				await interaction.followUp({
+					content: 'There was an error while executing this command!',
+					ephemeral: true
+				});
+			} else {
+				await interaction.reply({
+					content: 'There was an error while executing this command!',
+					ephemeral: true
+				});
+			}
+		} catch (replyError) {
+			console.error('Failed to send error message:', replyError);
 		}
 	}
 });
 
 const rest = new REST({ version: "10" }).setToken(token);
 const clientId = process.env.CLIENT_ID ?? (() => {
-  throw new Error("CLIENT_ID environment variable is not set");
+	throw new Error("CLIENT_ID environment variable is not set");
 })();
 
 const guildId = process.env.GUILD_ID ?? (() => {
-  throw new Error("GUID_ID environment variable is not set");
+	throw new Error("GUID_ID environment variable is not set");
 })();
 // and deploy your commands!
 (async () => {
 	try {
 		console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-    const commandsPayload = commands.map(c => c.data.toJSON());
-    console.log("payload:", JSON.stringify(commandsPayload, null, 2));
+		const commandsPayload = commands.map(c => c.data.toJSON());
+		console.log("payload:", JSON.stringify(commandsPayload, null, 2));
 		// The put method is used to fully refresh all commands in the guild with the current set
 		const data = await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commandsPayload }) as any; // find type
 
@@ -106,15 +119,15 @@ client.login(token);
 
 // Cleanup on exit
 process.on('SIGINT', async () => {
-  console.log('\nShutting down...');
-  await prisma.$disconnect();
-  await pool.end();
-  process.exit(0);
+	console.log('\nShutting down...');
+	await prisma.$disconnect();
+	await pool.end();
+	process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('\nShutting down...');
-  await prisma.$disconnect();
-  await pool.end();
-  process.exit(0);
+	console.log('\nShutting down...');
+	await prisma.$disconnect();
+	await pool.end();
+	process.exit(0);
 });

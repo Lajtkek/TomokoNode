@@ -7,17 +7,17 @@ const SCORE_FOR_REACT = 1;
 const SCORE_FOR_MESSAGE = 1;
 
 
-export function addReactionCountModule(client: Client, prisma: PrismaClient){
+export function addReactionCountModule(client: Client, prisma: PrismaClient) {
 
     const roleConfig = process.env.ROLE_IDS?.split(",").map(x => {
-    const touple = x.split("=")
+        const touple = x.split("=")
         return {
             id: touple?.at(0) ?? "",
             count: parseInt(touple?.at(1) ?? "0")
         }
     }) ?? []
 
-    async function addScore(user: User | PartialUser, guild: Guild, score: number){
+    async function addScore(user: User | PartialUser, guild: Guild, score: number) {
         const id = user.id;
         const res = await prisma.user.upsert({
             where: {
@@ -35,7 +35,7 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
         })
 
         const rolesToHave = roleConfig.filter(x => res.helperScore >= x.count);
-        if(rolesToHave.length == 0) return;
+        if (rolesToHave.length == 0) return;
 
         console.log(`Adding roles ${rolesToHave.map(x => x.id)} to ${user.id}`)
         const member: GuildMember = await guild.members.fetch(user.id);
@@ -44,18 +44,18 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
     }
 
     client.on(Events.MessageReactionAdd, async (reaction, user) => {
-        
-        if(user.partial) user = await user.fetch();
-        if(reaction.partial) reaction = await reaction.fetch();
-        if(reaction.message.author?.partial) reaction.message.author = await reaction.message.author.fetch()
-        
+
+        if (user.partial) user = await user.fetch();
+        if (reaction.partial) reaction = await reaction.fetch();
+        if (reaction.message.author?.partial) reaction.message.author = await reaction.message.author.fetch()
+
         const emojiName = reaction.emoji.name?.toLocaleLowerCase();
         const idUser = user.id;
         const idReactTarget = reaction.message.author?.id;
 
         // TODO: ADD BACK FOR PRODUCTION
-        //if(idUser == idReactTarget || idReactTarget == -1) return;
-        if(!emojiName || !idReactTarget) return;
+        if(idUser == idReactTarget || !idReactTarget) return;
+        if (!emojiName || !idReactTarget) return;
 
         const dbUser = await prisma.user.upsert({
             where: {
@@ -83,7 +83,7 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
             }
         })
 
-        if(!reactionCounter) return;
+        if (!reactionCounter) return;
 
         // Ensure the reactor user exists in the database
         await prisma.user.upsert({
@@ -105,7 +105,7 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
             },
         })
 
-        if(reactCounterRecord == null){
+        if (reactCounterRecord == null) {
             reactCounterRecord = await prisma.userReaction.create({
                 data: {
                     idReactor: idUser,
