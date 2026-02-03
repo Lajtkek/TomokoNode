@@ -85,6 +85,18 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
 
         if(!reactionCounter) return;
 
+        // Ensure the reactor user exists in the database
+        await prisma.user.upsert({
+            where: {
+                id: idUser
+            },
+            update: {},
+            create: {
+                id: idUser,
+                username: user.username ?? "N/A"
+            }
+        });
+
         let reactCounterRecord = await prisma.userReaction.findFirst({
             where: {
                 idReactTarget,
