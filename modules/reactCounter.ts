@@ -1,8 +1,6 @@
 import { Client, GatewayIntentBits, Events, type PartialUser, type User, Guild, GuildMember } from "discord.js";
 import { PrismaClient } from "../generated/prisma/index.js";
 
-// todo dát všechny id jako string
-// todo multiple reakce nepočítá ani jak count tak ani jak helperScore
 // todo nečte historii
 
 const SCORE_FOR_REACT = 1;
@@ -20,7 +18,7 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
     }) ?? []
 
     async function addScore(user: User | PartialUser, guild: Guild, score: number){
-        const id = parseInt(user.id);
+        const id = user.id;
         const res = await prisma.user.upsert({
             where: {
                 id
@@ -47,11 +45,11 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
 
     client.on(Events.MessageReactionAdd, async (reaction, user) => {
         const emojiName = reaction.emoji.name?.toLocaleLowerCase();
-        const idUser = parseInt(user.id);
-        const idReactTarget = parseInt(reaction.message.author?.id ?? "-1")
+        const idUser = user.id;
+        const idReactTarget = reaction.message.author?.id
         // TODO: ADD BACK FOR PRODUCTION
         //if(idUser == idReactTarget || idReactTarget == -1) return;
-        if(!emojiName) return;
+        if(!emojiName || !idReactTarget) return;
 
         const dbUser = await prisma.user.upsert({
             where: {
@@ -68,7 +66,7 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
 
         const reactionCounter = await prisma.userReactionCount.upsert({
             where: {
-                idUser_emojiName: { idUser, emojiName },
+                idUser_emojiName: { idUser: idReactTarget, emojiName },
             },
             create: {
                 idUser,
@@ -103,7 +101,7 @@ export function addReactionCountModule(client: Client, prisma: PrismaClient){
                 where: { id: reactionCounter.id },
                 data: {
                     count: {
-                        increment: 1
+                        increment: SCORE_FOR_REACT
                     }
                 }
             })

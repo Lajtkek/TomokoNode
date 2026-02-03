@@ -1,7 +1,8 @@
 -- CreateTable
 CREATE TABLE "User" (
-    "id" BIGINT NOT NULL,
+    "id" TEXT NOT NULL,
     "username" TEXT NOT NULL,
+    "helperScore" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -11,8 +12,8 @@ CREATE TABLE "UserReaction" (
     "id" BIGSERIAL NOT NULL,
     "emojiName" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "idReactor" BIGINT NOT NULL,
-    "idReactTarget" BIGINT NOT NULL,
+    "idReactor" TEXT NOT NULL,
+    "idReactTarget" TEXT NOT NULL,
     "idReactionCounter" BIGINT NOT NULL,
 
     CONSTRAINT "UserReaction_pkey" PRIMARY KEY ("id")
@@ -21,7 +22,7 @@ CREATE TABLE "UserReaction" (
 -- CreateTable
 CREATE TABLE "UserReactionCount" (
     "id" BIGSERIAL NOT NULL,
-    "idUser" BIGINT NOT NULL,
+    "idUser" TEXT NOT NULL,
     "emojiName" TEXT NOT NULL,
     "count" INTEGER NOT NULL DEFAULT 0,
 
