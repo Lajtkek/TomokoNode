@@ -49,8 +49,9 @@ client.commands = new Collection();
 client.prisma = prisma;
 
 import debugCommands from "./commands/debug/debug.ts"
+import reminderCommands from "./commands/reminder/reminder.ts"
 import { ChatGPTAPI } from "chatgpt";
-const commands = [debugCommands]
+const commands = [debugCommands,reminderCommands]
 
 for (const command of commands) {
 	client.commands.set(command.data.name, command);
