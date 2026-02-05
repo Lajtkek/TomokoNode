@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, Events, Partials, Collection, REST, Routes }
 import dotenv from "dotenv";
 
 import { addReactionCountModule } from "./modules/reactCounter.ts"
+import { addTomokoReplyModule } from "./modules/tomokoReply.ts"
 import { PrismaClient } from "./generated/prisma/index.js";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -37,14 +38,18 @@ client.once(Events.ClientReady, (readyClient) => {
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
+// handle null
+const chatGpt = new ChatGPTAPI({ apiKey: process.env.OPEN_AI_API_KEY ?? "" })
 
 addReactionCountModule(client, prisma);
+addTomokoReplyModule(client, prisma, chatGpt)
 
 // commands START
 client.commands = new Collection();
 client.prisma = prisma;
 
 import debugCommands from "./commands/debug/debug.ts"
+import { ChatGPTAPI } from "chatgpt";
 const commands = [debugCommands]
 
 for (const command of commands) {
