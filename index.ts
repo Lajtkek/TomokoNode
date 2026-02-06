@@ -1,3 +1,4 @@
+/// <reference path="./src/@types/discord.d.ts" />
 import { Client, GatewayIntentBits, Events, Partials, Collection, REST, Routes } from "discord.js";
 import dotenv from "dotenv";
 
@@ -6,6 +7,7 @@ import { addTomokoReplyModule } from "./modules/tomokoReply.ts"
 import { PrismaClient } from "./generated/prisma/index.js";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
+import UserService from "./services/userService.ts"
 
 dotenv.config({ path: ".env" });
 dotenv.config({ path: ".env.local", override: true });
@@ -47,6 +49,7 @@ addTomokoReplyModule(client, prisma, chatGpt)
 // commands START
 client.commands = new Collection();
 client.prisma = prisma;
+client.userService = new UserService(client);
 
 import debugCommands from "./commands/debug/debug.ts"
 import reminderCommands from "./commands/reminder/reminder.ts"
@@ -56,6 +59,14 @@ const commands = [debugCommands,reminderCommands]
 for (const command of commands) {
 	client.commands.set(command.data.name, command);
 }
+client.on(Events.InteractionCreate, async (interaction) => {
+	if (!interaction.isButton()) return;
+
+	await interaction.deferReply()
+	// todo filter all commands with buttonhandlers
+  	await reminderCommands.onButtonClick(client, interaction);
+})
+
 client.on(Events.InteractionCreate, async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
 	const command = interaction.client.commands.get(interaction.commandName);

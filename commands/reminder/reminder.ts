@@ -1,4 +1,6 @@
-import { ChatInputCommandInteraction, EmbedBuilder, ButtonBuilder, SlashCommandBuilder, ButtonStyle, ActionRowBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, ButtonBuilder, SlashCommandBuilder, ButtonStyle, ActionRowBuilder, type ButtonInteraction, Client } from "discord.js";
+
+const REMINDER_BUTTON_ID_PREFIX = "remind-me_"
 
 export default {
 	data: new SlashCommandBuilder()
@@ -22,13 +24,29 @@ export default {
 
 		await interaction.deferReply();
 
+		const client = interaction.client;
+		const prisma = client.prisma;
+		const userInDb = await client.userService.getDbUser(interaction.user);
+
+		const reminder = await prisma.reminder.create({
+			data: {
+				idOwner: userInDb.id,
+				recipients: {
+					create: [{
+						userId: userInDb.id
+					}]
+				},
+				description: remindText
+			}
+		})
+
 		const embed = new EmbedBuilder()
 			.setTitle(`Píšu si`)
 			.setDescription(`Připomenout ${remindText} ${remindAt}`)
 			.setColor(0x5865f2);
 
 		const button = new ButtonBuilder()
-			.setCustomId('my_button_id')
+			.setCustomId(REMINDER_BUTTON_ID_PREFIX + reminder.id)
 			.setLabel('Taky chci připomenout :)')
 			.setStyle(ButtonStyle.Primary);
 
@@ -39,4 +57,30 @@ export default {
   			components: [row.toJSON()],
 		})
 	},
+	async onButtonClick(client: Client, interaction: ButtonInteraction){
+		if(!interaction.customId.startsWith(REMINDER_BUTTON_ID_PREFIX)) return
+
+		const reminderId = interaction.customId.replace(REMINDER_BUTTON_ID_PREFIX, "");
+
+		const prisma = client.prisma;
+		const userInDb = await client.userService.getDbUser(interaction.user);
+
+		const reminderRecipient = await prisma.reminderRecipient.upsert({
+			where: {
+				reminderId_userId: {
+					reminderId: parseInt(reminderId),
+					userId: userInDb.id
+				}
+			},
+			create: {
+				userId: userInDb.id,
+				reminderId: parseInt(reminderId)
+			},
+			update: {
+
+			}
+		})
+			
+		await interaction.editReply(`Ok připomenu ti to :p`)
+	}
 };

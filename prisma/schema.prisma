@@ -22,6 +22,10 @@ model User {
   reactedTo UserReaction[] @relation(name: "reactTarget")
   reactedBy UserReaction[] @relation(name: "reactor")
 
+  ownedReminders Reminder[] @relation(name: "reminderOwner")
+
+  reminders ReminderRecipient[]
+
   helperScore Int @default(0)
 }
 
@@ -54,4 +58,25 @@ model UserReactionCount {
   reactionRecord UserReaction[]
 
   @@unique([idUser, emojiName])
+}
+
+model Reminder {
+  id BigInt @id @default(autoincrement())
+
+  owner   User   @relation(name: "reminderOwner", fields: [idOwner], references: [id])
+  idOwner String
+
+  recipients ReminderRecipient[]
+
+  description String
+}
+
+model ReminderRecipient {
+  reminder   Reminder @relation(fields: [reminderId], references: [id])
+  reminderId BigInt
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  @@id([reminderId, userId])
 }
