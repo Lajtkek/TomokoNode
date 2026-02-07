@@ -38,7 +38,12 @@ function createCron(client: Client, reminder: Reminder) {
 
     if (!channel?.isSendable()) return;
 
-    channel.send(`Halooo halooo, přípomínám "${reminder.description}"`);
+    channel.send({
+		content: `Halooo halooo, přípomínám "${reminder.description}"`,
+		allowedMentions: {
+			parse: []
+		}
+	});
 
     const usersToPing = await client.prisma.reminderRecipient.findMany({
       where: {

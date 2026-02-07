@@ -8,7 +8,7 @@ export function addTomokoReplyModule(client: Client, prisma: PrismaClient, chatG
         const channelId = message.channelId;
         const author = message.member?.partial ? await message.member.fetch() : message.member;
 
-        if(!message.content.includes("tomoko2")) return;
+        if(!message.content.includes("<@1465233109640286261>")) return;
         if(!gptConfig.allowedChannels.includes(channelId) ) return;
         if(!author || author?.user.bot) return;
         if(!gptConfig.allowedRoles.some(x => author.roles.cache.has(x))) return;
@@ -23,7 +23,9 @@ export function addTomokoReplyModule(client: Client, prisma: PrismaClient, chatG
 
         message.reply({
             content: result.text,
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { 
+                parse: []
+            }
         })
         
     });
