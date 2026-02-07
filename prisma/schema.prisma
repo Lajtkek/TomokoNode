@@ -68,6 +68,8 @@ model Reminder {
 
   recipients ReminderRecipient[]
 
+  idChannel String
+
   remindAt    DateTime @default(now())
   description String
 }

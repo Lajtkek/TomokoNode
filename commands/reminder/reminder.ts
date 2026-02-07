@@ -3,6 +3,8 @@ import { ChatInputCommandInteraction, EmbedBuilder, ButtonBuilder, SlashCommandB
 const REMINDER_BUTTON_ID_PREFIX = "remind-me_"
 import { Cron } from "croner";
 import { formatDuration, intervalToDuration, isValid, parse } from "date-fns";
+import { type Reminder } from "../../generated/prisma/index.js";
+
 
 function parseCz(s: string): Date | null {
   const patterns = [
@@ -22,12 +24,50 @@ function parseCz(s: string): Date | null {
 function formatMs(ms: number): string {
   return formatDuration(
     intervalToDuration({ start: 0, end: ms }),
-    { format: ["days", "hours", "minutes", "seconds"] }
+    { format: ["years", "months", "days", "hours", "minutes", "seconds"] }
   )
 }
 
+function createCron(client: Client, reminder: Reminder){
+		const remindAtDate = reminder.remindAt;
+		
+		const cron = new Cron(remindAtDate, async () => {
+		const channel = await client.channels.fetch(reminder.idChannel);
+
+		if(!channel?.isSendable()) return;
+
+		channel.send(`Halooo halooo, přípomínám "${reminder.description}"`)
+
+		const usersToPing = await client.prisma.reminderRecipient.findMany({
+			where: {
+				reminderId: reminder.id
+			}
+		})
+
+		console.log(`Created cron for ${reminder.idOwner} in ${formatMs(cron.msToNext() ?? 0)}`)
+
+		channel.send("" + usersToPing.map(x => `<@${x.userId}>`).join(","))
+	})
+
+	return cron;
+}
 
 export default {
+	async init(client: Client){
+		const prisma = client.prisma;
+
+		const reminders = await prisma.reminder.findMany({
+			where: {
+				remindAt: {
+					gt: new Date()
+				}
+			}
+		})
+
+		for(const reminder of reminders){
+			await createCron(client, reminder);
+		}
+	},
 	data: new SlashCommandBuilder()
 		.setName('remind-me')
 		.addStringOption(option =>
@@ -55,8 +95,10 @@ export default {
 			return
 		}
 
-
-
+		if(remindAtDate < new Date()) {
+			await interaction.editReply(`Minulost`)
+			return
+		}
 
 		const client = interaction.client;
 		const prisma = client.prisma;
@@ -70,26 +112,14 @@ export default {
 						userId: userInDb.id
 					}]
 				},
-				description: remindText
+				description: remindText,
+				remindAt: remindAtDate,
+				idChannel: interaction.channelId
 			}
 		})
 
-		const cron = new Cron(remindAtDate, async () => {
-			const channel = interaction.channel;
-			if(!channel?.isSendable()) return;
 
-			channel.send(`Halooo halooo, přípomínám "${remindText}" <@${interaction.user.id}>`)
-
-			const usersToPing = await client.prisma.reminderRecipient.findMany({
-				where: {
-					reminderId: reminder.id
-				}
-			})
-
-			channel.send("a taky " + usersToPing.map(x => `<@${x.userId}>`).join(","))
-		})
-
-
+		const cron = await createCron(client, reminder);
 		const toNext = cron.msToNext()
 
 		if(toNext == null){

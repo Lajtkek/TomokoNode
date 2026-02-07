@@ -33,6 +33,7 @@ CREATE TABLE "UserReactionCount" (
 CREATE TABLE "Reminder" (
     "id" BIGSERIAL NOT NULL,
     "idOwner" TEXT NOT NULL,
+    "idChannel" TEXT NOT NULL,
     "remindAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "description" TEXT NOT NULL,
 

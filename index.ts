@@ -58,6 +58,7 @@ const commands = [debugCommands,reminderCommands]
 
 for (const command of commands) {
 	client.commands.set(command.data.name, command);
+	await command.init(client)
 }
 client.on(Events.InteractionCreate, async (interaction) => {
 	if (!interaction.isButton()) return;
@@ -121,7 +122,7 @@ const guildId = process.env.GUILD_ID ?? (() => {
 		console.log("payload:", JSON.stringify(commandsPayload, null, 2));
 		// The put method is used to fully refresh all commands in the guild with the current set
 		const data = await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commandsPayload }) as any; // find type
-
+		
 		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
 	} catch (error) {
 		// And of course, make sure you catch and log any errors!

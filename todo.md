@@ -7,7 +7,5 @@
 - - add more context to messages
 - - add že když reply na tomoko tak reply back
 - Event připomínač
-- -save state
 - -load state
-
 - -validace inputu
