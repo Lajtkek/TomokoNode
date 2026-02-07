@@ -1,6 +1,31 @@
 import { ChatInputCommandInteraction, EmbedBuilder, ButtonBuilder, SlashCommandBuilder, ButtonStyle, ActionRowBuilder, type ButtonInteraction, Client } from "discord.js";
 
 const REMINDER_BUTTON_ID_PREFIX = "remind-me_"
+import { Cron } from "croner";
+import { formatDuration, intervalToDuration, isValid, parse } from "date-fns";
+
+function parseCz(s: string): Date | null {
+  const patterns = [
+    "dd.MM.yyyy HH:mm",
+    "dd.MM.yyyy H:mm",
+    "dd.MM.yyyy",
+  ]
+
+  for (const p of patterns) {
+    const d = parse(s, p, new Date())
+    if (isValid(d)) return d
+  }
+  return null
+}
+
+
+function formatMs(ms: number): string {
+  return formatDuration(
+    intervalToDuration({ start: 0, end: ms }),
+    { format: ["days", "hours", "minutes", "seconds"] }
+  )
+}
+
 
 export default {
 	data: new SlashCommandBuilder()
@@ -8,7 +33,7 @@ export default {
 		.addStringOption(option =>
 			option
 			.setName('remind-at')
-			.setDescription('When should I remind you? (e.g. 2026-02-10 18:00)')
+			.setDescription('When should I remind you? (e.g. 5.10.2000 8:00)')
 			.setRequired(true)
 		)
 		.addStringOption(option =>
@@ -22,7 +47,27 @@ export default {
 		const remindAt = interaction.options.getString('remind-at', true);
  		const remindText = interaction.options.getString('remind-text', true);
 
+		const remindAtDate = parseCz(remindAt)
+		
 		await interaction.deferReply();
+		if(remindAtDate == null) {
+			await interaction.editReply(`Nevím co myslíš tím "${remindAt}"`)
+			return
+		}
+
+		const cron = new Cron(remindAtDate, () => {
+			const channel = interaction.channel;
+			if(!channel?.isSendable()) return;
+
+			channel.send(`Halooo halooo, přípomínám "${remindText}" <@${interaction.user.id}>`)
+		})
+
+		const toNext = cron.msToNext()
+
+		if(toNext == null){
+			await interaction.editReply(`To už přoběhlo kamaráde :D`)
+			return
+		}
 
 		const client = interaction.client;
 		const prisma = client.prisma;
@@ -42,7 +87,7 @@ export default {
 
 		const embed = new EmbedBuilder()
 			.setTitle(`Píšu si`)
-			.setDescription(`Připomenout ${remindText} ${remindAt}`)
+			.setDescription(`Připomenout ${remindText} ${remindAt} (za ${formatMs(toNext)})`)
 			.setColor(0x5865f2);
 
 		const button = new ButtonBuilder()
@@ -81,6 +126,6 @@ export default {
 			}
 		})
 			
-		await interaction.editReply(`Ok připomenu ti to :p`)
+		await interaction.editReply(`Ok připomenu ti to :p (todo: implement)`)
 	}
 };

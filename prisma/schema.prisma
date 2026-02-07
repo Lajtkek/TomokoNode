@@ -68,6 +68,7 @@ model Reminder {
 
   recipients ReminderRecipient[]
 
+  remindAt    DateTime @default(now())
   description String
 }
 
