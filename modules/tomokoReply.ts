@@ -17,7 +17,7 @@ export function addTomokoReplyModule(client: Client, prisma: PrismaClient, chatG
         //const messages = await message.channel.messages.fetch({ limit: gptConfig.contextLength })
         
         const result = await chatGpt.sendMessage(message.content, {
-            systemMessage: gptConfig.systemMessage,
+            systemMessage: process.env.TOMOKO_CONFIG ?? ""
             
         })
 
