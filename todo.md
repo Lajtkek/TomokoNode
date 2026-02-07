@@ -9,5 +9,5 @@
 - Event připomínač
 - -save state
 - -load state
-- -schegule pings
+
 - -validace inputu

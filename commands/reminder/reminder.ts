@@ -55,19 +55,8 @@ export default {
 			return
 		}
 
-		const cron = new Cron(remindAtDate, () => {
-			const channel = interaction.channel;
-			if(!channel?.isSendable()) return;
 
-			channel.send(`Halooo halooo, přípomínám "${remindText}" <@${interaction.user.id}>`)
-		})
 
-		const toNext = cron.msToNext()
-
-		if(toNext == null){
-			await interaction.editReply(`To už přoběhlo kamaráde :D`)
-			return
-		}
 
 		const client = interaction.client;
 		const prisma = client.prisma;
@@ -84,6 +73,29 @@ export default {
 				description: remindText
 			}
 		})
+
+		const cron = new Cron(remindAtDate, async () => {
+			const channel = interaction.channel;
+			if(!channel?.isSendable()) return;
+
+			channel.send(`Halooo halooo, přípomínám "${remindText}" <@${interaction.user.id}>`)
+
+			const usersToPing = await client.prisma.reminderRecipient.findMany({
+				where: {
+					reminderId: reminder.id
+				}
+			})
+
+			channel.send("a taky " + usersToPing.map(x => `<@${x.userId}>`).join(","))
+		})
+
+
+		const toNext = cron.msToNext()
+
+		if(toNext == null){
+			await interaction.editReply(`To už přoběhlo kamaráde :D`)
+			return
+		}
 
 		const embed = new EmbedBuilder()
 			.setTitle(`Píšu si`)
@@ -105,27 +117,44 @@ export default {
 	async onButtonClick(client: Client, interaction: ButtonInteraction){
 		if(!interaction.customId.startsWith(REMINDER_BUTTON_ID_PREFIX)) return
 
-		const reminderId = interaction.customId.replace(REMINDER_BUTTON_ID_PREFIX, "");
+		const reminderId = parseInt(interaction.customId.replace(REMINDER_BUTTON_ID_PREFIX, ""));
 
 		const prisma = client.prisma;
 		const userInDb = await client.userService.getDbUser(interaction.user);
 
+
+		const reminder = await prisma.reminder.findFirst({
+			where: {
+				id: reminderId
+			}
+		})
+
+		if(reminder == null){
+			await interaction.editReply(`Reminder nenalezen`)
+			return;
+		}
+
+		if(reminder.remindAt <= new Date()){
+			await interaction.editReply(`To už se stalo xd`)
+			return
+		}
+
 		const reminderRecipient = await prisma.reminderRecipient.upsert({
 			where: {
 				reminderId_userId: {
-					reminderId: parseInt(reminderId),
-					userId: userInDb.id
+					reminderId: reminderId,
+					userId: userInDb.id,
 				}
 			},
 			create: {
 				userId: userInDb.id,
-				reminderId: parseInt(reminderId)
+				reminderId: reminderId
 			},
 			update: {
 
 			}
 		})
 			
-		await interaction.editReply(`Ok připomenu ti to :p (todo: implement)`)
+		await interaction.editReply(`Ok připomenu ti to :p`)
 	}
 };
