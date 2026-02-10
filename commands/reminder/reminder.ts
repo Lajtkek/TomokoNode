@@ -55,7 +55,7 @@ function createCron(client: Client, reminder: Reminder) {
   });
 
   console.log(
-    `Created cron for ${reminder.idOwner} in ${formatMs(cron.msToNext() ?? 0)}`,
+    `Created cron "${reminder.description}" in ${formatMs(cron.msToNext() ?? 0)}`,
   );
   return cron;
 }
@@ -158,6 +158,8 @@ export default {
   async onButtonClick(client: Client, interaction: ButtonInteraction) {
     if (!interaction.customId.startsWith(REMINDER_BUTTON_ID_PREFIX)) return;
 
+    interaction.deferReply();
+
     const reminderId = parseInt(
       interaction.customId.replace(REMINDER_BUTTON_ID_PREFIX, ""),
     );
@@ -195,6 +197,9 @@ export default {
       update: {},
     });
 
-    await interaction.editReply(`Ok připomenu ti to :p`);
+    await interaction.reply({
+      content: `Ok připomenu ti to :p`,
+      flags: ["Ephemeral"]
+    });
   },
 };
