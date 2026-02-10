@@ -57,7 +57,7 @@ client.userService = new UserService(client);
 import debugCommands from "./commands/debug/debug.ts"
 import reminderCommands from "./commands/reminder/reminder.ts"
 import { ChatGPTAPI } from "chatgpt";
-const commands = [debugCommands,reminderCommands]
+const commands = [debugCommands, reminderCommands]
 
 for (const command of commands) {
 	client.commands.set(command.data.name, command);
@@ -66,9 +66,8 @@ for (const command of commands) {
 client.on(Events.InteractionCreate, async (interaction) => {
 	if (!interaction.isButton()) return;
 
-	await interaction.deferReply()
 	// todo filter all commands with buttonhandlers
-  	await reminderCommands.onButtonClick(client, interaction);
+	await reminderCommands.onButtonClick(client, interaction);
 })
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -125,7 +124,7 @@ const guildId = process.env.GUILD_ID ?? (() => {
 		console.log("payload:", JSON.stringify(commandsPayload, null, 2));
 		// The put method is used to fully refresh all commands in the guild with the current set
 		const data = await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commandsPayload }) as any; // find type
-		
+
 		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
 	} catch (error) {
 		// And of course, make sure you catch and log any errors!
