@@ -199,8 +199,9 @@ export default {
       update: {},
     });
 
-    await interaction.editReply({
+    await interaction.followUp({
       content: `Ok připomenu ti to :p`,
+      flags: ["Ephemeral"]
     });
   },
 };
