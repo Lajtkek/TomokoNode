@@ -39,11 +39,11 @@ function createCron(client: Client, reminder: Reminder) {
     if (!channel?.isSendable()) return;
 
     channel.send({
-		content: `Halooo halooo, přípomínám "${reminder.description}"`,
-		allowedMentions: {
-			parse: []
-		}
-	});
+      content: `Halooo halooo, přípomínám "${reminder.description}"`,
+      allowedMentions: {
+        parse: []
+      }
+    });
 
     const usersToPing = await client.prisma.reminderRecipient.findMany({
       where: {
@@ -158,7 +158,7 @@ export default {
   async onButtonClick(client: Client, interaction: ButtonInteraction) {
     if (!interaction.customId.startsWith(REMINDER_BUTTON_ID_PREFIX)) return;
 
-    interaction.deferUpdate();
+    await interaction.deferUpdate();
 
     const reminderId = parseInt(
       interaction.customId.replace(REMINDER_BUTTON_ID_PREFIX, ""),
