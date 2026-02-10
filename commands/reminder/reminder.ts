@@ -158,9 +158,7 @@ export default {
   async onButtonClick(client: Client, interaction: ButtonInteraction) {
     if (!interaction.customId.startsWith(REMINDER_BUTTON_ID_PREFIX)) return;
 
-    interaction.deferReply({
-      flags: ["Ephemeral"]
-    });
+    interaction.deferUpdate();
 
     const reminderId = parseInt(
       interaction.customId.replace(REMINDER_BUTTON_ID_PREFIX, ""),
@@ -176,12 +174,12 @@ export default {
     });
 
     if (reminder == null) {
-      await interaction.editReply(`Reminder nenalezen`);
+      await interaction.followUp(`Reminder nenalezen`);
       return;
     }
 
     if (reminder.remindAt <= new Date()) {
-      await interaction.editReply(`To už se stalo xd`);
+      await interaction.followUp(`To už se stalo xd`);
       return;
     }
 
