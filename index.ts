@@ -1,4 +1,7 @@
 /// <reference path="./src/@types/discord.d.ts" />
+
+process.env.TZ = 'Europe/Prague';
+
 import { Client, GatewayIntentBits, Events, Partials, Collection, REST, Routes } from "discord.js";
 import dotenv from "dotenv";
 
