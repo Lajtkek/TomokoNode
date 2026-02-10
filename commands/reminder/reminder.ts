@@ -158,7 +158,9 @@ export default {
   async onButtonClick(client: Client, interaction: ButtonInteraction) {
     if (!interaction.customId.startsWith(REMINDER_BUTTON_ID_PREFIX)) return;
 
-    interaction.deferReply();
+    interaction.deferReply({
+      flags: ["Ephemeral"]
+    });
 
     const reminderId = parseInt(
       interaction.customId.replace(REMINDER_BUTTON_ID_PREFIX, ""),
