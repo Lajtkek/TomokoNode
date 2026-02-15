@@ -43,6 +43,9 @@ client.once(Events.ClientReady, (readyClient) => {
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
+await client.login(token);
+
+
 // handle null
 const chatGpt = new ChatGPTAPI({ apiKey: process.env.OPEN_AI_API_KEY ?? "" })
 
@@ -115,6 +118,7 @@ const clientId = process.env.CLIENT_ID ?? (() => {
 const guildId = process.env.GUILD_ID ?? (() => {
 	throw new Error("GUID_ID environment variable is not set");
 })();
+
 // and deploy your commands!
 (async () => {
 	try {
@@ -133,7 +137,6 @@ const guildId = process.env.GUILD_ID ?? (() => {
 })();
 //commands end
 
-client.login(token);
 
 
 

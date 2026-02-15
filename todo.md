@@ -7,3 +7,4 @@
 - - add že když reply na tomoko tak reply back
 - Event připomínač
 - -validace inputu
+- -split event reminder message so it does not cross discord message limit 

@@ -11,7 +11,7 @@ import {
 
 const REMINDER_BUTTON_ID_PREFIX = "remind-me_";
 import { Cron } from "croner";
-import { formatDuration, intervalToDuration, isValid, parse } from "date-fns";
+import { differenceInBusinessDays, differenceInDays, differenceInWeeks, formatDuration, intervalToDuration, isValid, parse } from "date-fns";
 import { type Reminder } from "../../generated/prisma/index.js";
 
 function parseCz(s: string): Date | null {
@@ -60,6 +60,14 @@ function createCron(client: Client, reminder: Reminder) {
   return cron;
 }
 
+// TODO extract
+const semesterStart = parseCz("15.2.2026 8:00");
+const currentDate =  parseCz("23.2.2026 8:00");
+const weeksSince = differenceInWeeks(currentDate!, semesterStart!)
+const currentWeekOdd = weeksSince % 2 == 0;
+
+console.log()
+
 export default {
   async init(client: Client) {
     const prisma = client.prisma;
@@ -75,6 +83,18 @@ export default {
     for (const reminder of reminders) {
       await createCron(client, reminder);
     }
+
+    // TODO extract
+    const job = new Cron(
+      "0 8 * * MON",
+      { timezone: "Europe/Prague" },
+      async () => {
+          const channel = await client.channels.fetch("1472698646804955330");
+        if (!channel?.isSendable()) return;
+
+          channel.send(`Začal týden **${weeksSince}** \nTo je **${currentWeekOdd ? "Lichý" : "Sudý"}** týden`)
+        }
+    );
   },
   data: new SlashCommandBuilder()
     .setName("remind-me")
