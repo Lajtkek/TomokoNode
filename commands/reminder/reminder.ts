@@ -61,12 +61,8 @@ function createCron(client: Client, reminder: Reminder) {
 }
 
 // TODO extract
-const semesterStart = parseCz("15.2.2026 8:00");
-const currentDate =  parseCz("23.2.2026 8:00");
-const weeksSince = differenceInWeeks(currentDate!, semesterStart!)
-const currentWeekOdd = weeksSince % 2 == 0;
 
-console.log()
+
 
 export default {
   async init(client: Client) {
@@ -91,7 +87,10 @@ export default {
       async () => {
           const channel = await client.channels.fetch("1472698646804955330");
         if (!channel?.isSendable()) return;
-
+        const semesterStart = parseCz("15.2.2026 8:00");
+const currentDate =  new Date(); //parseCz("23.2.2026 8:00");
+const weeksSince = differenceInWeeks(currentDate!, semesterStart!)
+const currentWeekOdd = weeksSince % 2 == 0;
           channel.send(`Začal týden **${weeksSince}** \nTo je **${currentWeekOdd ? "Lichý" : "Sudý"}** týden`)
         }
     );
